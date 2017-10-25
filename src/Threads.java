@@ -94,7 +94,18 @@ public class Threads implements Runnable{
             //System.out.println("There was an error retrieving from the cache:" + ex);
         }
 
-
+        try {
+            server = new Socket(request.getHost(), request.getPort()); /* Raise socket */
+            DataOutputStream toServer = new DataOutputStream(server.getOutputStream()); /* Create outputstream for server on socket */
+            toServer.writeBytes(request.toString()); /* Write request to the outputstream*/
+        } catch (UnknownHostException e) {
+            //System.out.println("Unknown host: " + request.getHost());
+            //System.out.println(e);
+            return;
+        } catch (IOException e) {
+            //System.out.println("Error contacting host: " + e);
+            return;
+        }
 
 
         try {
@@ -152,6 +163,58 @@ public class Threads implements Runnable{
 
 
     }
+
+    public void log(HttpRequest request, HttpResponse response) {
+        try {
+            FileWriter fwriter = null;
+            BufferedWriter bwriter = null;
+            File f = new File("/Users/danielfrost/Desktop/frostkarkiproxyfinal/src/log.txt");
+            String localAddress = InetAddress.getLocalHost().getHostAddress().toString();
+            String remoteAddress = client.getRemoteSocketAddress().toString();
+            if (remoteAddress.startsWith("/0:0:0:0")) {
+                remoteAddress = localAddress;
+            }
+            fwriter = new FileWriter(f, true);
+            bwriter = new BufferedWriter(fwriter);
+            bwriter.write(System.lineSeparator());
+            StringBuilder sb = new StringBuilder();
+            sb.append(receivetime);
+            if (timeElapsed != null) {
+                sb.append("  " + timeElapsed.toMillis() + "ms");
+            }
+            if (cf != null) {
+                sb.append("  Cache Hit");
+                if (cf.valid) sb.append("  Validated:" + cf.fileName);
+                else sb.append("  Validated:" + cf.fileName);
+            } else {
+                sb.append("  Cache Miss");
+                if (cachedFile != "" && cachedFile != null) {
+                    if (cachedFile.indexOf("_") > 0) {
+                        cachedFile = cachedFile.substring(cachedFile.lastIndexOf("_"));
+                    }
+                    sb.append("  Cached:" + cachedFile);
+                }
+                if (evictedFile != "" && evictedFile != null) {
+                    evictedFile = MyServer.getName(evictedFile);
+                    sb.append("  Evicted:" + evictedFile);
+                }
+            }
+            if (remoteAddress != null && remoteAddress != "") {
+                sb.append("  " + remoteAddress);
+            }
+            if (response.status != 0) {
+                sb.append("  " + response.status);
+            }
+            if (request.URI != null) {
+                sb.append("  " + request.URI);
+            }
+            bwriter.write(sb.toString());
+            bwriter.flush();
+        } catch (Exception ex) {
+            //System.out.println("Error logging file:" + ex);
+        }
+    }
+
 
 
 

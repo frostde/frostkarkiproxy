@@ -26,7 +26,43 @@ public class MyServer {
         if (s.startsWith("/")) s = s.replace("/", "_");
         return s;
     }
+    public synchronized static String[] caching(HttpRequest request, HttpResponse response) throws IOException {
+        File file;
+        DataOutputStream outStream;
+        String[] returnpair = new String[2];
 
+        try {
+            file = new File("cache/", "cached" + getName(request.URI));
+            outStream = new DataOutputStream(new FileOutputStream(file));
+            outStream.writeBytes(response.toString());
+            outStream.write(response.body);
+            outStream.close();
+            if (cacheAlgo == 1) {
+                returnpair[1] = lrucache.set(getName(request.URI), file.getAbsolutePath());
+            } else {
+                returnpair[1] = lfuCache.addCacheEntry(getName(request.URI), file.getAbsolutePath());
+            }
+            returnpair[0] = file.getPath();
+        } catch (Exception ex) {
+        }
+
+        return returnpair;
+    }
+
+    public static class ReportThread implements Runnable {
+        public void run() {
+            try {
+                System.out.println("Cache Miss: " + cacheMiss + " Cache Hit:" + cacheHit);
+                File index = new File("cache/");
+                String[] entries = index.list();
+                for (String s : entries) {
+                    File currentfile = new File(index.getPath(), s);
+                    currentfile.delete();
+                }
+            }catch (Exception ex) {
+            }
+        }
+    }
 
     public synchronized static CachedFile uncaching(String URI) throws IOException{
         File cachedFile;
