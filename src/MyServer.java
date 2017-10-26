@@ -236,9 +236,9 @@ return null;
         if (!cachedir.exists()){cachedir.mkdir();}
 
         try {
-            myPort = /*Integer.parseInt(args[0])*/8900;
-            capacity = /*Integer.parseInt(args[1])*/ 5;
-            cacheAlgo = /*Integer.parseInt(args[2])*/1;
+            myPort = Integer.parseInt(args[0]);
+            capacity = Integer.parseInt(args[1]);
+            cacheAlgo = Integer.parseInt(args[2]);
             String algo = (cacheAlgo == 1) ? " LRU" : " LFU";
             System.out.println("Proxy running on port " + myPort + " with a cache capacity of " + capacity + " using the" +
                     algo + " replacement algorithm.");
