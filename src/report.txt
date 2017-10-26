@@ -1,0 +1,9 @@
+LRU:
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 359  Misses: 62  Hits: 297  Ratio: 82.729805
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 402  Misses: 65  Hits: 337  Ratio: 83.83085
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 382  Misses: 64  Hits: 318  Ratio: 83.24608
+
+LFU:
+Replacement algorithm: LFU  Capacity: 5  Total Requests: 346  Misses: 56  Hits: 290  Ratio: 83.815025
+Replacement algorithm: LFU  Capacity: 5  Total Requests: 344  Misses: 50  Hits: 294  Ratio: 85.46512
+Replacement algorithm: LFU  Capacity: 5  Total Requests: 385  Misses: 63  Hits: 322  Ratio: 83.63636
