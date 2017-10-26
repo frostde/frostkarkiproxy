@@ -3,7 +3,7 @@ import java.io.*;
 public class HttpResponse {
     final static String CRLF = "\r\n";
     final static int BUF_SIZE = 8192;
-    final static int MAX_OBJECT_SIZE = 300000;
+    final static int MAX_OBJECT_SIZE = 400000;
     String version;
     int status = 0;
     String statusLine = "";

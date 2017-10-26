@@ -78,7 +78,7 @@ public class HttpRequest {
 
         req = method + " " + URI + " " + version + CRLF;
         req += headers;
-        req += "Connection: close" + CRLF;
+        //req += "Connection: close" + CRLF;
         req += CRLF;
 
 

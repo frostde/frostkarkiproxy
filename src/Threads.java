@@ -63,105 +63,107 @@ public class Threads implements Runnable{
 
 
 
-        start = Instant.now();
-        try {
-            BufferedReader fromClient = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            request = new HttpRequest(fromClient);
-        } catch (IOException e) {
-            return;
-        }
-
-        receivetime = new Date().toString();
-
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-            cf = MyServer.uncaching(request.URI, request);
-            if (cf != null) {
-                if (request.requestHeaders.get("If-Modified-Since") != null) {
-                    Date d = new Date(request.requestHeaders.get("If-Modified-Since"));
-                    String first = convertEDT_to_GMT(d.toString());
-                    String second = convertEDT_to_GMT(new Date(cf.lastModified).toString());
-                    String lastModified;
-                    lastModified =  (new Date(first).getTime() > new Date(second).getTime()) ? first :  second;
-                    request.requestHeaders.put("If-Modified-Since", lastModified);
-                } else {
-                    String lastModified = dateFormat.format(cf.lastModified);
-                    String newTime = convertEDT_to_GMT(lastModified);
-                    request.requestHeaders.put("If-Modified-Since", newTime);
-                }
+            start = Instant.now();
+            try {
+                client.setReuseAddress(true);
+                client.setKeepAlive(true);
+                BufferedReader fromClient = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                request = new HttpRequest(fromClient);
+            } catch (IOException e) {
+                return;
             }
-        } catch (IOException ex) {
-            //System.out.println("There was an error retrieving from the cache:" + ex);
-        }
 
-        try {
-            server = new Socket(request.getHost(), request.getPort()); /* Raise socket */
-            DataOutputStream toServer = new DataOutputStream(server.getOutputStream()); /* Create outputstream for server on socket */
-            toServer.writeBytes(request.toString()); /* Write request to the outputstream*/
-        } catch (UnknownHostException e) {
-            //System.out.println("Unknown host: " + request.getHost());
-            //System.out.println(e);
-            return;
-        } catch (IOException e) {
-            //System.out.println("Error contacting host: " + e);
-            return;
-        }
+            receivetime = new Date().toString();
 
-
-        try {
-            DataInputStream fromServer = new DataInputStream(server.getInputStream());
-            response = new HttpResponse(fromServer);
-            DataOutputStream toClient = new DataOutputStream(client.getOutputStream());
-
-
-
-            switch (response.status) {
-                case 200: {
-                    toClient.writeBytes(response.toString());
-                    toClient.write(response.body);
-
-
-                    String[] pair = MyServer.caching(request, response);
-                    if (pair[0] == "") {
-                        String x = "";
+            try {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+                cf = MyServer.uncaching(request.URI, request);
+                if (cf != null) {
+                    if (request.requestHeaders.get("If-Modified-Since") != null) {
+                        Date d = new Date(request.requestHeaders.get("If-Modified-Since"));
+                        String first = convertEDT_to_GMT(d.toString());
+                        String second = convertEDT_to_GMT(new Date(cf.lastModified).toString());
+                        String lastModified;
+                        lastModified = (new Date(first).getTime() > new Date(second).getTime()) ? first : second;
+                        request.requestHeaders.put("If-Modified-Since", lastModified);
+                    } else {
+                        String lastModified = dateFormat.format(cf.lastModified);
+                        String newTime = convertEDT_to_GMT(lastModified);
+                        request.requestHeaders.put("If-Modified-Since", newTime);
                     }
-                    evictedFile = pair[1];
-                    cachedFile = pair[0];
-
-                    toClient.flush();
-                    break;
                 }
-                case 304: {
-                    if (cf != null) {
-                        if (cf.hit) {
-                            cf.valid = true;
-                            toClient.write(cf.content);
-                            toClient.flush();
+            } catch (IOException ex) {
+                //System.out.println("There was an error retrieving from the cache:" + ex);
+            }
+
+            try {
+                server = new Socket(request.getHost(), request.getPort()); /* Raise socket */
+                DataOutputStream toServer = new DataOutputStream(server.getOutputStream()); /* Create outputstream for server on socket */
+                toServer.writeBytes(request.toString()); /* Write request to the outputstream*/
+            } catch (UnknownHostException e) {
+                System.out.println("Unknown host: " + request.getHost());
+                //System.out.println(e);
+                return;
+            } catch (IOException e) {
+                //System.out.println("Error contacting host: " + e);
+                return;
+            }
+
+
+            try {
+                DataInputStream fromServer = new DataInputStream(server.getInputStream());
+                response = new HttpResponse(fromServer);
+                DataOutputStream toClient = new DataOutputStream(client.getOutputStream());
+
+
+                switch (response.status) {
+                    case 200: {
+                        toClient.writeBytes(response.toString());
+                        toClient.write(response.body);
+
+
+                        String[] pair = MyServer.caching(request, response);
+                        if (request.getHost() == "www.uc.edu") {
+                            String s = "";
+                        }
+                        evictedFile = pair[1];
+                        cachedFile = pair[0];
+
+                        toClient.flush();
+                        break;
+                    }
+                    case 304: {
+                        if (cf != null) {
+                            if (cf.hit) {
+                                cf.valid = true;
+                                toClient.write(cf.content);
+                                toClient.flush();
+                            } else {
+                                toClient.writeBytes(response.toString());
+                                toClient.write(response.body);
+                                toClient.flush();
+                            }
                         } else {
                             toClient.writeBytes(response.toString());
                             toClient.write(response.body);
                             toClient.flush();
                         }
-                    } else {
+                        break;
+                    }
+                    default: {
                         toClient.writeBytes(response.toString());
                         toClient.write(response.body);
                         toClient.flush();
                     }
-                    break;
                 }
-                default: {
-                    toClient.writeBytes(response.toString());
-                    toClient.write(response.body);
-                    toClient.flush();
-                }
+            } catch (IOException ex) {
+                //System.out.println("Error writing to client:" + ex);
+                //ex.printStackTrace();
             }
-        } catch (IOException ex) {
-            //System.out.println("Error writing to client:" + ex);
-            //ex.printStackTrace();
-        }
-        end = Instant.now();
-        timeElapsed = Duration.between(start, end);
-        log(request, response);
+            end = Instant.now();
+            timeElapsed = Duration.between(start, end);
+            log(request, response);
+
 
 
 

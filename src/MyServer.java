@@ -68,38 +68,38 @@ public class MyServer {
                 returnpair[0] = file.getPath();
             } else {
                 String c = "";
-                File f = new File("cache/" + request.getHost());
-                if (!f.exists()) f.mkdir();
-                file = writeFile(response, URI, f);
-                returnpair[0] = file.getPath();
-                if (file != null) {
-                    if (cacheAlgo == 1) {
-                        if ((returnpair[1] = lrucache.set(request.getHost(), f.getAbsolutePath())) != "") {
-                            File folderToDelete = new File(returnpair[1]);
-                            String[] entries = folderToDelete.list();
-                            for (String s : entries) {
-                                File fileToDelete = new File (folderToDelete, s);
-                                fileToDelete.delete();
-                                //System.out.println("Deleting " + s);
+                    File f = new File("cache/" + request.getHost());
+                    if (!f.exists()) f.mkdir();
+                    file = writeFile(response, URI, f);
+                    returnpair[0] = file.getPath();
+                    if (file != null) {
+                        if (cacheAlgo == 1) {
+                            if ((returnpair[1] = lrucache.set(request.getHost(), f.getAbsolutePath())) != "") {
+                                File folderToDelete = new File(returnpair[1]);
+                                String[] entries = folderToDelete.list();
+                                for (String s : entries) {
+                                    File fileToDelete = new File(folderToDelete, s);
+                                    fileToDelete.delete();
+                                    //System.out.println("Deleting " + s);
+                                }
+                                folderToDelete.delete();
+                                //System.out.println("deleting " + returnpair[1]);
                             }
-                            folderToDelete.delete();
-                            //System.out.println("deleting " + returnpair[1]);
-                        }
-                    } else {
-                        if ((returnpair[1] = lfuCache.addCacheEntry(request.getHost(), f.getAbsolutePath())) != "") {
-                            File folderToDelete = new File(returnpair[1]);
-                            String[] entries = folderToDelete.list();
-                            for (String s : entries) {
-                                File fileToDelete = new File(folderToDelete, s);
-                                fileToDelete.delete();
-                                //System.out.println("Deleting " + s);
+                        } else {
+                            if ((returnpair[1] = lfuCache.addCacheEntry(request.getHost(), f.getAbsolutePath())) != "") {
+                                File folderToDelete = new File(returnpair[1]);
+                                String[] entries = folderToDelete.list();
+                                for (String s : entries) {
+                                    File fileToDelete = new File(folderToDelete, s);
+                                    fileToDelete.delete();
+                                    //System.out.println("Deleting " + s);
+                                }
+                                folderToDelete.delete();
+                                //System.out.println("deleting " + returnpair[1]);
                             }
-                            folderToDelete.delete();
-                            //System.out.println("deleting " + returnpair[1]);
                         }
                     }
-                }
-                //System.out.println(URI +" "+ request.getHost() + " " +request.requestHeaders.get("Referer"));
+
             }
             //returnpair[0] = file.getPath();
         } catch (Exception ex) {
@@ -116,7 +116,7 @@ public class MyServer {
                 System.out.println("Cache Miss: " + cacheMiss + " Cache Hit:" + cacheHit);
                 File index = new File("cache/");
                 String[] entries = index.list();
-                for (String s : entries) {
+                /*for (String s : entries) {
                     File currentfile = new File(index.getPath(), s);
                     String[] otherentries = currentfile.list();
                     for (String x : otherentries) {
@@ -124,7 +124,7 @@ public class MyServer {
                         thisfile.delete();
                     }
                     currentfile.delete();
-                }
+                }*/
                 totalRequests = cacheHit + cacheMiss;
                 ratio = ((float)cacheHit/totalRequests)*100;
                 String algo = (cacheAlgo == 1) ? "LRU" : "LFU";
@@ -151,47 +151,53 @@ public class MyServer {
         }
     }
 
-    public synchronized static CachedFile uncaching(String URI, HttpRequest req) throws IOException{
+    public synchronized static CachedFile uncaching(String URI, HttpRequest req) throws IOException {
         File parentFolder;
         File cachedFile;
         FileInputStream fileIn;
         String hashfile;
         CachedFile cf;
         String parent;
+        try {
         if (req.requestHeaders.get("Referer") != null) {
             parent = req.requestHeaders.get("Referer");
         } else {
             parent = req.getHost();
         }
-        parent = parent.replace(parent.substring(0,7), "");
-        parent = parent.replace("/", "").trim();
 
-            if ((hashfile = get(parent)) != "") {
-                cf = new CachedFile();
-                parentFolder = new File(hashfile);
-                String[] entries = parentFolder.list();
-                URI = "cached" + getName(req.URI);
-                for (String s : entries) {
-                    if (s.equals(URI)) {
-                        cacheHit++;
-                        cachedFile = new File(parentFolder, URI);
-                        fileIn = new FileInputStream(cachedFile);
-                        cf.content = new byte[(int) cachedFile.length()];
-                        fileIn.read(cf.content);
-                        cf.lastModified = cachedFile.lastModified();
-                        cf.fileName = cachedFile.getPath().substring(cachedFile.getPath().lastIndexOf("/"));
-                        return cf;
-                    }
+
+            parent = parent.replace(parent.substring(0, 7), "");
+            parent = parent.replace("/", "").trim();
+
+
+        if ((hashfile = get(parent)) != "") {
+            cf = new CachedFile();
+            parentFolder = new File(hashfile);
+            String[] entries = parentFolder.list();
+            URI = "cached" + getName(req.URI);
+            for (String s : entries) {
+                if (s.equals(URI)) {
+                    cacheHit++;
+                    cachedFile = new File(parentFolder, URI);
+                    fileIn = new FileInputStream(cachedFile);
+                    cf.content = new byte[(int) cachedFile.length()];
+                    fileIn.read(cf.content);
+                    cf.lastModified = cachedFile.lastModified();
+                    cf.fileName = cachedFile.getPath().substring(cachedFile.getPath().lastIndexOf("/"));
+                    return cf;
                 }
-                return null;
-            } else {
-                cacheMiss++;
-                return null;
             }
-
-
+            return null;
+        } else {
+            cacheMiss++;
+            return null;
+        }
+    } catch (Exception ex)
+    {
+        String s = "";
     }
-
+return null;
+    }
 
     public static void init(int p) {
         port = p;
@@ -230,9 +236,9 @@ public class MyServer {
         if (!cachedir.exists()){cachedir.mkdir();}
 
         try {
-            myPort = Integer.parseInt(args[0]);
-            capacity = Integer.parseInt(args[1]);
-            cacheAlgo = Integer.parseInt(args[2]);
+            myPort = /*Integer.parseInt(args[0])*/8900;
+            capacity = /*Integer.parseInt(args[1])*/ 5;
+            cacheAlgo = /*Integer.parseInt(args[2])*/1;
             String algo = (cacheAlgo == 1) ? " LRU" : " LFU";
             System.out.println("Proxy running on port " + myPort + " with a cache capacity of " + capacity + " using the" +
                     algo + " replacement algorithm.");
