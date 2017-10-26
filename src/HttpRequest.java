@@ -40,7 +40,10 @@ public class HttpRequest {
                 if (line != null) {
                     while (line.length() != 0) {
                         headers += line + CRLF;
-
+                        if (line.indexOf(":") > 0){
+                            tmp = Threads.splitFirstIndex(line, ':');
+                            requestHeaders.put(tmp[0], tmp[1]);
+                        }
                         if (line.startsWith("Host:")) {
                             tmp = line.split(" ");
                             if (tmp[1].indexOf(':') > 0) {

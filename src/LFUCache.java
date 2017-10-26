@@ -8,7 +8,6 @@ public class LFUCache {
         private String data;
         private int frequency;
 
-        // default constructor
         private CacheEntry() {
         }
 
@@ -30,12 +29,10 @@ public class LFUCache {
 
     }
 
-    private static int initialCapacity;
+    public static int initialCapacity;
 
     private static LinkedHashMap<String, CacheEntry> cacheMap = new LinkedHashMap<String, CacheEntry>();
-    /* LinkedHashMap is used because it has features of both HashMap and LinkedList. 
-     * Thus, we can get an entry in O(1) and also, we can iterate over it easily.
-     * */
+
 
     public LFUCache(int initialCapacity) {
         this.initialCapacity = initialCapacity;
@@ -47,13 +44,14 @@ public class LFUCache {
             CacheEntry temp = new CacheEntry();
             temp.setData(data);
             temp.setFrequency(0);
+            int size = cacheMap.size();
 
             cacheMap.put(key, temp);
         } else {
             String entryKeyToBeRemoved = getLFUKey();
             File f = new File(cacheMap.get(entryKeyToBeRemoved).getData());
+            returnString = cacheMap.get(entryKeyToBeRemoved).getData();
             cacheMap.remove(entryKeyToBeRemoved);
-            f.delete();
             String s = "";
             CacheEntry temp = new CacheEntry();
             temp.setData(data);
@@ -78,14 +76,14 @@ public class LFUCache {
     }
 
     public String get(String key) {
-        if (cacheMap.containsKey(key))  // cache hit
+        if (cacheMap.containsKey(key))
         {
             CacheEntry temp = cacheMap.get(key);
             temp.frequency++;
             cacheMap.put(key, temp);
             return temp.data;
         }
-        return ""; // cache miss
+        return "";
     }
 
     public static boolean isFull() {

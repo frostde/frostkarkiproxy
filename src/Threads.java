@@ -75,7 +75,7 @@ public class Threads implements Runnable{
 
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-            cf = MyServer.uncaching(request.URI);
+            cf = MyServer.uncaching(request.URI, request);
             if (cf != null) {
                 if (request.requestHeaders.get("If-Modified-Since") != null) {
                     Date d = new Date(request.requestHeaders.get("If-Modified-Since"));
@@ -122,6 +122,9 @@ public class Threads implements Runnable{
 
 
                     String[] pair = MyServer.caching(request, response);
+                    if (pair[0] == "") {
+                        String x = "";
+                    }
                     evictedFile = pair[1];
                     cachedFile = pair[0];
 
@@ -195,8 +198,9 @@ public class Threads implements Runnable{
                     sb.append("  Cached:" + cachedFile);
                 }
                 if (evictedFile != "" && evictedFile != null) {
+                    String algo = (MyServer.cacheAlgo == 1) ? "LRU" : "LFU";
                     evictedFile = MyServer.getName(evictedFile);
-                    sb.append("  Evicted:" + evictedFile);
+                    sb.append("  Evicted, " + algo + ":" + evictedFile.substring(evictedFile.lastIndexOf("_")));
                 }
             }
             if (remoteAddress != null && remoteAddress != "") {

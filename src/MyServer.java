@@ -8,46 +8,107 @@ public class MyServer {
     private static LRUCache lrucache;
     public static int cacheMiss = 0;
     public static int cacheHit = 0;
-    public static int cacheAlgo = 1;
+    public static int cacheAlgo = 0;
     public static LFUCache lfuCache;
-    public static int capacity = 50;
+    public static int capacity = 3;
+    public static int totalRequests;
+    public static float ratio;
 
 
 
     public static String getName(String s) {
-        if (s.indexOf("?") > 0) {
-            s = s.replace(s.substring(s.indexOf("?")), "");
+        try {
+            if (s!= null) {
+                if (s.indexOf("?") > 0) {
+                    s = s.replace(s.substring(s.indexOf("?")), "");
+                }
+                if (s.indexOf("/") > 0) {
+                    s = s.substring(s.lastIndexOf("/"));
+                }
+                if (s.indexOf(".") > 0) {
+                    s = s.replace(s.substring(s.lastIndexOf(".")), "").trim();
+                }
+                if (s.equals("/")) s = "_index";
+                if (s.startsWith("/")) s = s.replace("/", "_");
+            }
+        } catch (Exception ex) {
+            String x = "";
         }
-        s = s.substring(s.lastIndexOf("/"));
-        if (s.indexOf(".") > 0) {
-            s = s.replace(s.substring(s.lastIndexOf(".")), "").trim();
-        }
-        if (s.equals("/")) s = "_index";
-        if (s.startsWith("/")) s = s.replace("/", "_");
         return s;
     }
+
+    public static File writeFile(HttpResponse response, String URI, File f) {
+        DataOutputStream outStream;
+        try {
+            File ourFile = new File(f, "cached" + getName(URI));
+            outStream = new DataOutputStream(new FileOutputStream(ourFile));
+            outStream.writeBytes(response.toString());
+            outStream.write(response.body);
+            outStream.close();
+            return ourFile;
+        } catch (Exception ex) {
+
+        }
+        return null;
+
+    }
+
+
     public synchronized static String[] caching(HttpRequest request, HttpResponse response) throws IOException {
         File file;
         DataOutputStream outStream;
         String[] returnpair = new String[2];
-
+        String URI = request.URI;
         try {
-            file = new File("cache/", "cached" + getName(request.URI));
-            outStream = new DataOutputStream(new FileOutputStream(file));
-            outStream.writeBytes(response.toString());
-            outStream.write(response.body);
-            outStream.close();
-            if (cacheAlgo == 1) {
-                returnpair[1] = lrucache.set(getName(request.URI), file.getAbsolutePath());
+            if (request.requestHeaders.get("Referer") != null) {
+                String referer = request.requestHeaders.get("Referer");
+                File referedFolder = new File("cache/" + referer.replace(referer.substring(0,7), ""));
+                if (!referedFolder.exists()) referedFolder.mkdir();
+                file = writeFile(response, URI, referedFolder);
+                returnpair[0] = file.getPath();
             } else {
-                returnpair[1] = lfuCache.addCacheEntry(getName(request.URI), file.getAbsolutePath());
+                String c = "";
+                File f = new File("cache/" + request.getHost());
+                if (!f.exists()) f.mkdir();
+                file = writeFile(response, URI, f);
+                returnpair[0] = file.getPath();
+                if (file != null) {
+                    if (cacheAlgo == 1) {
+                        if ((returnpair[1] = lrucache.set(request.getHost(), f.getAbsolutePath())) != "") {
+                            File folderToDelete = new File(returnpair[1]);
+                            String[] entries = folderToDelete.list();
+                            for (String s : entries) {
+                                File fileToDelete = new File (folderToDelete, s);
+                                fileToDelete.delete();
+                                //System.out.println("Deleting " + s);
+                            }
+                            folderToDelete.delete();
+                            //System.out.println("deleting " + returnpair[1]);
+                        }
+                    } else {
+                        if ((returnpair[1] = lfuCache.addCacheEntry(request.getHost(), f.getAbsolutePath())) != "") {
+                            File folderToDelete = new File(returnpair[1]);
+                            String[] entries = folderToDelete.list();
+                            for (String s : entries) {
+                                File fileToDelete = new File(folderToDelete, s);
+                                fileToDelete.delete();
+                                //System.out.println("Deleting " + s);
+                            }
+                            folderToDelete.delete();
+                            //System.out.println("deleting " + returnpair[1]);
+                        }
+                    }
+                }
+                //System.out.println(URI +" "+ request.getHost() + " " +request.requestHeaders.get("Referer"));
             }
-            returnpair[0] = file.getPath();
+            //returnpair[0] = file.getPath();
         } catch (Exception ex) {
         }
 
         return returnpair;
     }
+
+
 
     public static class ReportThread implements Runnable {
         public void run() {
@@ -57,34 +118,75 @@ public class MyServer {
                 String[] entries = index.list();
                 for (String s : entries) {
                     File currentfile = new File(index.getPath(), s);
+                    String[] otherentries = currentfile.list();
+                    for (String x : otherentries) {
+                        File thisfile = new File(currentfile.getPath(), x);
+                        thisfile.delete();
+                    }
                     currentfile.delete();
                 }
+                totalRequests = cacheHit + cacheMiss;
+                ratio = ((float)cacheHit/totalRequests)*100;
+                String algo = (cacheAlgo == 1) ? "LRU" : "LFU";
+                FileWriter fWriter;
+                BufferedWriter bwriter;
+                File f = new File("report.txt");
+                fWriter = new FileWriter(f, true);
+                bwriter = new BufferedWriter(fWriter);
+                bwriter.write(System.lineSeparator());
+                StringBuilder sb = new StringBuilder();
+                if (totalRequests != 0) {
+                    sb.append("Replacement algorithm: " + algo);
+                    sb.append("  Capacity: " + capacity);
+                    sb.append("  Total Requests: " + totalRequests);
+                    sb.append("  Misses: " + cacheMiss);
+                    sb.append("  Hits: " + cacheHit);
+                    sb.append("  Ratio: " + ratio);
+                }
+                bwriter.write(sb.toString());
+                bwriter.flush();
             }catch (Exception ex) {
+                String s = "";
             }
         }
     }
 
-    public synchronized static CachedFile uncaching(String URI) throws IOException{
+    public synchronized static CachedFile uncaching(String URI, HttpRequest req) throws IOException{
+        File parentFolder;
         File cachedFile;
         FileInputStream fileIn;
         String hashfile;
         CachedFile cf;
+        String parent;
+        if (req.requestHeaders.get("Referer") != null) {
+            parent = req.requestHeaders.get("Referer");
+        } else {
+            parent = req.getHost();
+        }
+        parent = parent.replace(parent.substring(0,7), "");
+        parent = parent.replace("/", "").trim();
 
-
-            if ((hashfile = get(getName(URI))) != "") {
+            if ((hashfile = get(parent)) != "") {
                 cf = new CachedFile();
-                cacheHit++;
-                cachedFile = new File(hashfile);
-                fileIn = new FileInputStream(cachedFile);
-                cf.content = new byte[(int) cachedFile.length()];
-                fileIn.read(cf.content);
-                cf.lastModified = cachedFile.lastModified();
-                cf.fileName = hashfile.substring(hashfile.lastIndexOf("/"));
-                return cf;
+                parentFolder = new File(hashfile);
+                String[] entries = parentFolder.list();
+                URI = "cached" + getName(req.URI);
+                for (String s : entries) {
+                    if (s.equals(URI)) {
+                        cacheHit++;
+                        cachedFile = new File(parentFolder, URI);
+                        fileIn = new FileInputStream(cachedFile);
+                        cf.content = new byte[(int) cachedFile.length()];
+                        fileIn.read(cf.content);
+                        cf.lastModified = cachedFile.lastModified();
+                        cf.fileName = cachedFile.getPath().substring(cachedFile.getPath().lastIndexOf("/"));
+                        return cf;
+                    }
+                }
+                return null;
             } else {
                 cacheMiss++;
-                cf = null;
-                return cf;
+                return null;
             }
 
 
