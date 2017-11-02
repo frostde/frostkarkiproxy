@@ -73,6 +73,7 @@ public class Threads implements Runnable{
                 return;
             }
 
+
             receivetime = new Date().toString();
 
             try {
@@ -101,7 +102,7 @@ public class Threads implements Runnable{
                 DataOutputStream toServer = new DataOutputStream(server.getOutputStream()); /* Create outputstream for server on socket */
                 toServer.writeBytes(request.toString()); /* Write request to the outputstream*/
             } catch (UnknownHostException e) {
-                System.out.println("Unknown host: " + request.getHost());
+                //System.out.println("Unknown host: " + request.getHost());
                 //System.out.println(e);
                 return;
             } catch (IOException e) {
@@ -123,9 +124,6 @@ public class Threads implements Runnable{
 
 
                         String[] pair = MyServer.caching(request, response);
-                        if (request.getHost() == "www.uc.edu") {
-                            String s = "";
-                        }
                         evictedFile = pair[1];
                         cachedFile = pair[0];
 
@@ -173,7 +171,7 @@ public class Threads implements Runnable{
         try {
             FileWriter fwriter = null;
             BufferedWriter bwriter = null;
-            File f = new File("/Users/danielfrost/Desktop/frostkarkiproxyfinal/src/log.txt");
+            File f = new File("log.txt");
             String localAddress = InetAddress.getLocalHost().getHostAddress().toString();
             String remoteAddress = client.getRemoteSocketAddress().toString();
             if (remoteAddress.startsWith("/0:0:0:0")) {
@@ -183,41 +181,53 @@ public class Threads implements Runnable{
             bwriter = new BufferedWriter(fwriter);
             bwriter.write(System.lineSeparator());
             StringBuilder sb = new StringBuilder();
+            //Time received
             sb.append(receivetime);
+            //Duration
             if (timeElapsed != null) {
                 sb.append("  " + timeElapsed.toMillis() + "ms");
             }
             if (cf != null) {
-                sb.append("  Cache Hit");
-                if (cf.valid) sb.append("  Validated:" + cf.fileName);
-                else sb.append("  Validated:" + cf.fileName);
+                //hit or miss
+                if (cf.hit) sb.append("  Cache hit");
+                else sb.append("  Cache miss");
+                //replacement status
+                sb.append("  Replacement status: No eviction");
+                //consistency status
+                if (cf.valid) sb.append("  Consistencty status: validated" + cf.fileName);
+                else sb.append("  Consistency status: not valid" + cf.fileName);
             } else {
-                sb.append("  Cache Miss");
-                if (cachedFile != "" && cachedFile != null) {
-                    if (cachedFile.indexOf("_") > 0) {
-                        cachedFile = cachedFile.substring(cachedFile.lastIndexOf("_"));
-                    }
-                    sb.append("  Cached:" + cachedFile);
+                //hit or miss
+                sb.append("  Cache miss");
+                //replacement status
+                if (evictedFile != null && !evictedFile.equals("")) {
+                    if (evictedFile.indexOf("/") > 0) {
+                        sb.append("  Replacement status: evicted:" + evictedFile.substring(evictedFile.lastIndexOf("/")));
+                    } else sb.append("  Replacement status: evicted:" + evictedFile);
                 }
-                if (evictedFile != "" && evictedFile != null) {
-                    String algo = (MyServer.cacheAlgo == 1) ? "LRU" : "LFU";
-                    evictedFile = MyServer.getName(evictedFile);
-                    sb.append("  Evicted, " + algo + ":" + evictedFile.substring(evictedFile.lastIndexOf("_")));
-                }
+                else sb.append("  Replacement status: No Eviction");
+                //consistency status
+                sb.append("  No validation");
             }
+            //client address
             if (remoteAddress != null && remoteAddress != "") {
                 sb.append("  " + remoteAddress);
             }
-            if (response.status != 0) {
-                sb.append("  " + response.status);
-            }
+            //requested URI
             if (request.URI != null) {
                 sb.append("  " + request.URI);
             }
+            //status code
+            if (response.status != 0) {
+                sb.append("  " + response.status);
+            }
+
+
             bwriter.write(sb.toString());
             bwriter.flush();
         } catch (Exception ex) {
-            //System.out.println("Error logging file:" + ex);
+            System.out.println("Error logging file:" + ex);
+            ex.printStackTrace();
         }
     }
 

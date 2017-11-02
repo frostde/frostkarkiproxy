@@ -1,11 +1,30 @@
-LRU:
-Replacement algorithm: LRU  Capacity: 5  Total Requests: 359  Misses: 62  Hits: 297  Ratio: 82.729805
-Replacement algorithm: LRU  Capacity: 5  Total Requests: 402  Misses: 65  Hits: 337  Ratio: 83.83085
-Replacement algorithm: LRU  Capacity: 5  Total Requests: 382  Misses: 64  Hits: 318  Ratio: 83.24608
-
-LFU:
-Replacement algorithm: LFU  Capacity: 5  Total Requests: 346  Misses: 56  Hits: 290  Ratio: 83.815025
-Replacement algorithm: LFU  Capacity: 5  Total Requests: 344  Misses: 50  Hits: 294  Ratio: 85.46512
-Replacement algorithm: LFU  Capacity: 5  Total Requests: 385  Misses: 63  Hits: 322  Ratio: 83.63636
-
 Replacement algorithm: LRU  Capacity: 5  Total Requests: 130  Misses: 72  Hits: 58  Ratio: 44.615383
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 336  Misses: 172  Hits: 164  Ratio: 48.80952
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 169  Misses: 47  Hits: 122  Ratio: 72.18935
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 281  Misses: 208  Hits: 73  Ratio: 25.97865
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 133  Misses: 83  Hits: 50  Ratio: 37.593987
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 26  Misses: 17  Hits: 9  Ratio: 34.615387
+Replacement algorithm: LRU  Capacity: 5  Total Requests: 203  Misses: 141  Hits: 62  Ratio: 30.541874
+Replacement algorithm: LRU  Capacity: 50  Total Requests: 178  Misses: 116  Hits: 62  Ratio: 34.831463
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 163  Misses: 84  Hits: 79  Ratio: 48.466255
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 140  Misses: 48  Hits: 92  Ratio: 65.71429
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 89  Misses: 24  Hits: 65  Ratio: 73.03371
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 111  Misses: 29  Hits: 82  Ratio: 73.87387
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 251  Misses: 87  Hits: 164  Ratio: 65.338646
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 292  Misses: 96  Hits: 196  Ratio: 67.12329
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 134  Misses: 24  Hits: 110  Ratio: 82.08955
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 66  Misses: 58  Hits: 8  Ratio: 12.121212
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 54  Misses: 48  Hits: 6  Ratio: 11.111112
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 86  Misses: 61  Hits: 25  Ratio: 29.069767
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 108  Misses: 108  Hits: 0  Ratio: 0.0
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 114  Misses: 114  Hits: 0  Ratio: 0.0
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 146  Misses: 37  Hits: 109  Ratio: 74.65753
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 38  Misses: 2  Hits: 36  Ratio: 94.73685
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 50  Misses: 3  Hits: 47  Ratio: 94.0
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 48  Misses: 1  Hits: 47  Ratio: 97.91667
+
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 79  Misses: 2  Hits: 77  Ratio: 97.46835
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 62  Misses: 1  Hits: 61  Ratio: 98.3871
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 57  Misses: 15  Hits: 42  Ratio: 73.68421
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 1  Misses: 1  Hits: 0  Ratio: 0.0
+Replacement algorithm: LRU  Capacity: 2  Total Requests: 204  Misses: 95  Hits: 109  Ratio: 53.431374

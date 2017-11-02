@@ -165,9 +165,8 @@ public class MyServer {
             parent = req.getHost();
         }
 
-
-            parent = parent.replace(parent.substring(0, 7), "");
-            parent = parent.replace("/", "").trim();
+        parent = parent.replace(parent.substring(0, 7), "");
+        parent = parent.replace("/", "").trim();
 
 
         if ((hashfile = get(parent)) != "") {
@@ -196,7 +195,7 @@ public class MyServer {
     {
         String s = "";
     }
-return null;
+    return null;
     }
 
     public static void init(int p) {
